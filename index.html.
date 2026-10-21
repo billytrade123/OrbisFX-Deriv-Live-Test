@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OrbisFX Live Data Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #080d18;
+      color: #edf4ff;
+      font-family: Arial, sans-serif;
+    }
+    main {
+      max-width: 600px;
+      margin: auto;
+    }
+    .panel {
+      background: #111a2b;
+      border: 1px solid #263650;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 18px;
+    }
+    h1 { color: #38bdf8; }
+    #price {
+      font-size: 38px;
+      color: #34d399;
+      font-weight: bold;
+      margin: 18px 0;
+    }
+    button, select {
+      padding: 12px;
+      margin: 5px 4px 5px 0;
+      border-radius: 8px;
+      border: 1px solid #38bdf8;
+      background: #17243a;
+      color: white;
+      font-size: 15px;
+    }
+    #status { color: #fbbf24; font-weight: bold; }
+    p { line-height: 1.6; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>ORBISFX</h1>
+  <p>Deriv Live Tick Connection Test</p>
+
+  <section class="panel">
+    <p>Connection: <span id="status">Not connected</span></p>
+
+    <label for="market">Select market:</label>
+    <select id="market">
+      <option value="1HZ10V">Volatility 10 (1s)</option>
+      <option value="1HZ25V">Volatility 25 (1s)</option>
+      <option value="1HZ50V">Volatility 50 (1s)</option>
+      <option value="1HZ75V">Volatility 75 (1s)</option>
+      <option value="1HZ100V">Volatility 100 (1s)</option>
+    </select>
+
+    <p>Live price</p>
+    <div id="price">Waiting...</div>
+    <p>Last digit: <strong id="digit">—</strong></p>
+    <p>Ticks received: <strong id="count">0</strong></p>
+    <p id="message">Ready to connect.</p>
+
+    <button id="connect">Connect / Reconnect</button>
+    <button id="stop">Disconnect</button>
+  </section>
+
+  <section class="panel">
+    <p>When connected, the live price should update and the tick count should increase.</p>
+    <p>This test uses public market data. Do not enter your password or API token.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const APP_ID = "1089";
+  let ws = null;
+  let ticks = 0;
+
+  const el = id => document.getElementById(id);
+
+  function disconnect() {
+    if (ws) {
+      const old = ws;
+      ws = null;
+      old.onclose = null;
+      old.close();
+    }
+  }
+
+  function connect() {
+    disconnect();
+    ticks = 0;
+    el("count").textContent = "0";
+    el("price").textContent = "Waiting...";
+    el("digit").textContent = "—";
+    el("status").textContent = "Connecting...";
+    el("message").textContent = "Opening connection...";
+
+    const symbol = el("market").value;
+    const current = new WebSocket(
+      "wss://ws.derivws.com/websockets/v3?app_id=" + APP_ID
+    );
+    ws = current;
+
+    current.onopen = () => {
+      if (ws !== current) return;
+      el("status").textContent = "Connected";
+      el("message").textContent = "Requesting live ticks...";
+      current.send(JSON.stringify({
+        ticks: symbol,
+        subscribe: 1
+      }));
+    };
+
+    current.onmessage = event => {
+      if (ws !== current) return;
+
+      const data = JSON.parse(event.data);
+
+      if (data.error) {
+        el("status").textContent = "API error";
+        el("message").textContent =
+          data.error.code + ": " + data.error.message;
+        return;
+      }
+
+      if (data.msg_type === "tick" && data.tick) {
+        const quote = String(data.tick.quote);
+        ticks++;
+
+        el("price").textContent = quote;
+        el("digit").textContent =
+          quote.includes(".")
+            ? quote.split(".").pop().slice(-1)
+            : quote.slice(-1);
+
+        el("count").textContent = ticks;
+        el("status").textContent = "Connected — live";
+        el("message").textContent =
+          "Last tick: " +
+          new Date(data.tick.epoch * 1000).toLocaleTimeString();
+      }
+    };
+
+    current.onerror = () => {
+      if (ws !== current) return;
+      el("status").textContent = "Connection error";
+      el("message").textContent =
+        "Check internet or try reconnecting.";
+    };
+
+    current.onclose = () => {
+      if (ws !== current) return;
+      ws = null;
+      el("status").textContent = "Disconnected";
+      el("message").textContent =
+        "Connection closed. Tap reconnect to retry.";
+    };
+  }
+
+  el("connect").addEventListener("click", connect);
+
+  el("stop").addEventListener("click", () => {
+    disconnect();
+    el("status").textContent = "Disconnected";
+    el("message").textContent = "Stopped manually.";
+  });
+
+  el("market").addEventListener("change", () => {
+    if (ws) connect();
+  });
+})();
+</script>
+</body>
+</html>
