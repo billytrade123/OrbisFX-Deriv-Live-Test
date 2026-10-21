@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbisFX Live Test</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #080d18;
+      color: #eef4ff;
+      font-family: Arial, sans-serif;
+    }
+    .app { max-width: 500px; margin: auto; }
+    h1 { color: #38bdf8; margin-bottom: 5px; }
+    .muted { color: #91a0b8; font-size: 14px; }
+    .card {
+      background: #111a2b;
+      border: 1px solid #24334b;
+      border-radius: 14px;
+      padding: 18px;
+      margin-top: 15px;
+    }
+    label { display: block; margin-bottom: 8px; color: #b7c7dd; }
+    select, button {
+      width: 100%;
+      padding: 13px;
+      border-radius: 9px;
+      border: 1px solid #334760;
+      background: #0b1322;
+      color: white;
+      font-size: 15px;
+    }
+    button {
+      background: #0284c7;
+      border: none;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+    .value { font-size: 27px; font-weight: bold; margin-top: 8px; overflow-wrap: anywhere; }
+    .digit { font-size: 56px; color: #38bdf8; }
+    .status { color: #fbbf24; font-weight: bold; }
+    .small { font-size: 13px; color: #91a0b8; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>OrbisFX</h1>
+  <div class="muted">DERIV LIVE DIGIT TEST</div>
+
+  <div class="card">
+    <label for="market">Select volatility market</label>
+    <select id="market">
+      <option value="1HZ100V">Volatility 100 (1s) Index</option>
+      <option value="1HZ50V">Volatility 50 (1s) Index</option>
+      <option value="1HZ75V">Volatility 75 (1s) Index</option>
+      <option value="1HZ25V">Volatility 25 (1s) Index</option>
+      <option value="1HZ10V">Volatility 10 (1s) Index</option>
+      <option value="R_100">Volatility 100 Index</option>
+      <option value="R_75">Volatility 75 Index</option>
+      <option value="R_50">Volatility 50 Index</option>
+      <option value="R_25">Volatility 25 Index</option>
+      <option value="R_10">Volatility 10 Index</option>
+    </select>
+    <button id="connect">Connect / Change Market</button>
+    <p class="status" id="status">Not connected</p>
+  </div>
+
+  <div class="card">
+    <div class="muted">LIVE PRICE</div>
+    <div class="value" id="price">Waiting...</div>
+    <div class="muted">Last digit</div>
+    <div class="digit" id="digit">-</div>
+    <div class="small" id="updated">No ticks received yet</div>
+  </div>
+
+  <div class="card">
+    <div class="muted">LAST DIGIT STATISTICS</div>
+    <div class="value" id="ticks">0</div>
+    <div class="small">Ticks received this session</div>
+    <div id="stats" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <div class="muted">TEST RESULT</div>
+    <div class="value" id="result">WAITING FOR DATA</div>
+    <p class="small">
+      Statistics describe recent ticks only. They do not predict the next digit
+      or guarantee a profitable trade.
+    </p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let ws = null;
+  let counts = Array(10).fill(0);
+  let total = 0;
+  let generation = 0;
+
+  function showStatus(message) {
+    $("status").textContent = message;
+  }
+
+  function connect() {
+    generation++;
+    const myGeneration = generation;
+
+    if (ws) {
+      ws.onclose = null;
+      ws.close();
+    }
+
+    counts = Array(10).fill(0);
+    total = 0;
+    $("ticks").textContent = "0";
+    $("price").textContent = "Waiting...";
+    $("digit").textContent = "-";
+    $("stats").textContent = "";
+    $("result").textContent = "WAITING FOR DATA";
+    $("updated").textContent = "Waiting for first tick...";
+    showStatus("Connecting...");
+
+    try {
+      ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
+    } catch (e) {
+      showStatus("Connection error");
+      return;
+    }
+
+    const socket = ws;
+    const timeout = setTimeout(() => {
+      if (myGeneration === generation && socket.readyState !== WebSocket.OPEN) {
+        showStatus("Connection timeout. Retry.");
+      }
+    }, 12000);
+
+    socket.onopen = () => {
+      if (myGeneration !== generation) return;
+      clearTimeout(timeout);
+      showStatus("Connected — subscribing...");
+      socket.send(JSON.stringify({
+        ticks: $("market").value,
+        subscribe: 1
+      }));
+    };
+
+    socket.onmessage = event => {
+      if (myGeneration !== generation) return;
+
+      let data;
+      try { data = JSON.parse(event.data); }
+      catch (e) { return; }
+
+      if (data.error) {
+        showStatus("API error: " + data.error.message);
+        return;
+      }
+
+      if (data.msg_type === "tick" && data.tick) {
+        const quote = String(data.tick.quote);
+        const lastDigit = Number(quote.slice(-1));
+
+        $("price").textContent = quote;
+        $("digit").textContent = lastDigit;
+        $("updated").textContent =
+          "Last update: " + new Date().toLocaleTimeString();
+
+        counts[lastDigit]++;
+        total++;
+        $("ticks").textContent = total;
+        renderStats();
+
+        showStatus("LIVE — receiving ticks");
+        $("result").textContent =
+          total < 20 ? "COLLECTING DATA" : "LIVE DATA READY";
+      }
+    };
+
+    socket.onerror = () => {
+      if (myGeneration === generation) {
+        showStatus("Connection error. Check internet.");
+      }
+    };
+
+    socket.onclose = () => {
+      if (myGeneration === generation) {
+        clearTimeout(timeout);
+        showStatus("Connection closed. Tap Connect to retry.");
+      }
+    };
+  }
+
+  function renderStats() {
+    $("stats").innerHTML = "";
+    for (let i = 0; i <= 9; i++) {
+      const percent = total ? counts[i] / total * 100 : 0;
+      const row = document.createElement("div");
+      row.style.margin = "8px 0";
+      row.innerHTML =
+        '<div style="display:flex;justify-content:space-between;font-size:13px">' +
+        '<span>Digit ' + i + '</span><span>' +
+        counts[i] + ' (' + percent.toFixed(1) + '%)</span></div>' +
+        '<div style="height:6px;background:#26344a;border-radius:5px;margin-top:4px">' +
+        '<div style="height:6px;width:' + percent +
+        '%;background:#38bdf8;border-radius:5px"></div></div>';
+      $("stats").appendChild(row);
+    }
+  }
+
+  $("connect").addEventListener("click", connect);
+  connect();
+})();
+</script>
+</body>
+</html>
