@@ -2,289 +2,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OrbisFX | Deriv Live Analyzer</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 18px;
-      background: #080d16; color: #eef4ff;
-      font-family: Arial, sans-serif;
-    }
-    .wrap { max-width: 650px; margin: auto; }
-    header { padding: 12px 0 20px; }
-    .brand { color: #55d6ff; font-weight: 800; font-size: 25px; }
-    .sub { color: #94a3b8; margin-top: 6px; font-size: 13px; }
-    .card {
-      background: #111a29; border: 1px solid #26344a;
-      border-radius: 15px; padding: 17px; margin-bottom: 14px;
-    }
-    .label { color: #9cacc3; font-size: 12px; text-transform: uppercase; }
-    .value { font-size: 25px; font-weight: 700; margin-top: 8px; overflow-wrap: anywhere; }
-    .status { color: #ffc857; font-weight: bold; }
-    select, button {
-      width: 100%; padding: 13px; border-radius: 10px;
-      border: 1px solid #34465f; background: #172438;
-      color: white; font-size: 15px; margin-top: 10px;
-    }
-    button { background: #087fa5; border: 0; font-weight: bold; }
-    button:disabled { opacity: .55; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .digits { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
-    .digit {
-      background: #172438; padding: 10px 2px; text-align: center;
-      border-radius: 8px; font-size: 14px;
-    }
-    .digit b { display: block; margin-bottom: 6px; font-size: 18px; }
-    .bar { height: 4px; background: #2a3b51; margin-top: 7px; border-radius: 5px; overflow: hidden; }
-    .fill { height: 100%; background: #55d6ff; width: 0%; }
-    .note { color: #9cacc3; font-size: 12px; line-height: 1.6; }
-    .good { color: #53e0a1; }
-    .bad { color: #ff8080; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrbisFX Live Tick Test</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d18;color:#eef4ff;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:600px;margin:auto}
+.brand{color:#38bdf8;font-size:14px;letter-spacing:3px;font-weight:bold}
+h1{font-size:28px;margin-bottom:6px}
+.sub{color:#9caec7;font-size:14px}
+.card{background:#111a2b;border:1px solid #24334b;border-radius:14px;padding:18px;margin-top:16px}
+.label{color:#9caec7;font-size:13px}
+.value{font-size:25px;font-weight:bold;margin-top:8px;overflow-wrap:anywhere}
+.status{color:#fbbf24}
+button,select{width:100%;padding:13px;border-radius:9px;border:1px solid #334766;background:#17243a;color:white;font-size:15px;margin-top:10px}
+button{background:#0284c7;border:0;font-weight:bold}
+button:disabled{opacity:.6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.digit{font-size:48px;color:#38bdf8}
+#ticks{padding-left:20px;color:#c7d5e9;line-height:1.8;overflow-wrap:anywhere}
+.note{font-size:12px;color:#8497b4;line-height:1.6;margin-top:18px}
+</style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="brand">ORBISFX</div>
-    <div class="sub">DERIV LIVE TICK & DIGIT ANALYZER</div>
-  </header>
+<div class="container">
+<div class="brand">ORBISFX</div>
+<h1>Deriv Live Tick Test</h1>
+<p class="sub">Live market data connection checker</p>
 
-  <div class="card">
-    <div class="label">Connection status</div>
-    <div class="value status" id="status">Not connected</div>
-    <div class="sub" id="detail">Choose a market, then connect.</div>
-    <label for="market">Market</label>
-    <select id="market">
-      <option value="R_10">Volatility 10 Index</option>
-      <option value="R_25">Volatility 25 Index</option>
-      <option value="R_50">Volatility 50 Index</option>
-      <option value="R_75">Volatility 75 Index</option>
-      <option value="R_100">Volatility 100 Index</option>
-      <option value="1HZ10V">Volatility 10 (1s) Index</option>
-      <option value="1HZ25V">Volatility 25 (1s) Index</option>
-      <option value="1HZ50V">Volatility 50 (1s) Index</option>
-      <option value="1HZ75V">Volatility 75 (1s) Index</option>
-      <option value="1HZ100V">Volatility 100 (1s) Index</option>
-    </select>
-    <button id="connect">Connect to live ticks</button>
-    <button id="stop" disabled>Disconnect</button>
-  </div>
+<div class="card">
+<div class="label">Market</div>
+<select id="market">
+<option value="1HZ100V">Volatility 100 (1s) Index</option>
+<option value="1HZ50V">Volatility 50 (1s) Index</option>
+<option value="1HZ25V">Volatility 25 (1s) Index</option>
+<option value="1HZ75V">Volatility 75 (1s) Index</option>
+<option value="R_100">Volatility 100 Index</option>
+<option value="R_50">Volatility 50 Index</option>
+<option value="R_25">Volatility 25 Index</option>
+<option value="R_75">Volatility 75 Index</option>
+</select>
+<button id="connect">Connect to Deriv</button>
+<div class="label" style="margin-top:14px">Connection status</div>
+<div class="value status" id="status">Not connected</div>
+</div>
 
-  <div class="grid">
-    <div class="card">
-      <div class="label">Latest price</div>
-      <div class="value" id="price">—</div>
-    </div>
-    <div class="card">
-      <div class="label">Last digit</div>
-      <div class="value" id="lastDigit">—</div>
-    </div>
-    <div class="card">
-      <div class="label">Ticks received</div>
-      <div class="value" id="count">0</div>
-    </div>
-    <div class="card">
-      <div class="label">Last 100 ticks</div>
-      <div class="value" id="sample">0 / 100</div>
-    </div>
-  </div>
+<div class="grid">
+<div class="card">
+<div class="label">Live price</div>
+<div class="value" id="price">—</div>
+</div>
+<div class="card">
+<div class="label">Last digit</div>
+<div class="digit" id="digit">—</div>
+</div>
+</div>
 
-  <div class="card">
-    <div class="label">Last-digit frequency</div>
-    <p class="note">Percentages describe the observed sample, not the next tick.</p>
-    <div class="digits" id="digits"></div>
-  </div>
+<div class="card">
+<div class="label">Ticks received</div>
+<div class="value" id="count">0</div>
+<div class="label" style="margin-top:18px">Recent ticks</div>
+<ol id="ticks"><li>Waiting for connection</li></ol>
+</div>
 
-  <div class="card">
-    <div class="label">Analysis status</div>
-    <div class="value" id="analysis">WAIT</div>
-    <p class="note" id="analysisNote">
-      Waiting for real tick data. This tool does not guarantee predictions or profits.
-    </p>
-  </div>
-
-  <div class="card">
-    <div class="label">Recent ticks</div>
-    <div id="recent" class="note">No ticks received yet.</div>
-  </div>
-
-  <p class="note">
-    OrbisFX test build. Data requires an internet connection and an available
-    Deriv market. Digit frequencies are historical observations, not trading signals.
-  </p>
+<p class="note">This page reads public market tick data only. It does not place trades or guarantee predictions. Internet access is required.</p>
 </div>
 
 <script>
-(() => {
-  const $ = id => document.getElementById(id);
-  let ws = null;
-  let ticks = [];
-  let total = 0;
-  let reconnectTimer = null;
-  let manuallyStopped = true;
-  let requestId = 1;
+const statusEl=document.getElementById("status");
+const priceEl=document.getElementById("price");
+const digitEl=document.getElementById("digit");
+const countEl=document.getElementById("count");
+const ticksEl=document.getElementById("ticks");
+const connectBtn=document.getElementById("connect");
+const marketEl=document.getElementById("market");
+let socket=null, count=0, recent=[], reconnectTimer=null;
 
-  function status(message, color = "#ffc857") {
-    $("status").textContent = message;
-    $("status").style.color = color;
+function setStatus(text,color="#fbbf24"){
+  statusEl.textContent=text;
+  statusEl.style.color=color;
+}
+function disconnect(){
+  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}
+  if(socket){
+    socket.onclose=null;
+    socket.onerror=null;
+    socket.onmessage=null;
+    socket.close();
+    socket=null;
   }
-
-  function drawDigits() {
-    const counts = Array(10).fill(0);
-    ticks.forEach(t => counts[t.digit]++);
-    const max = Math.max(1, ...counts);
-    $("digits").innerHTML = counts.map((n, d) => {
-      const pct = ticks.length ? n / ticks.length * 100 : 0;
-      return `<div class="digit"><b>${d}</b>${pct.toFixed(0)}%
-        <div class="bar"><div class="fill" style="width:${n / max * 100}%"></div></div>
-        <span class="note">${n} ticks</span></div>`;
-    }).join("");
-
-    $("sample").textContent = `${ticks.length} / 100`;
-
-    if (ticks.length < 30) {
-      $("analysis").textContent = "WAIT";
-      $("analysisNote").textContent =
-        "Collect at least 30 ticks before reviewing the sample. More data may improve the frequency estimate, but does not guarantee a prediction.";
-    } else {
-      const maxCount = Math.max(...counts);
-      const most = counts.indexOf(maxCount);
-      $("analysis").textContent = "OBSERVE";
-      $("analysisNote").textContent =
-        `Digit ${most} appeared most often in this sample (${(maxCount / ticks.length * 100).toFixed(1)}%). This is descriptive only; it does not establish an edge for the next tick.`;
-    }
-  }
-
-  function renderTick(quote, epoch, pip) {
-    const decimals = Number.isInteger(pip) ? pip : 2;
-    const formatted = Number(quote).toFixed(decimals);
-    const digit = Number(formatted.replace(".", "").slice(-1));
-    ticks.push({ price: formatted, digit, time: new Date(epoch * 1000) });
-    if (ticks.length > 100) ticks.shift();
-    total++;
-
-    $("price").textContent = formatted;
-    $("lastDigit").textContent = digit;
-    $("count").textContent = total;
-    $("recent").innerHTML = ticks.slice(-8).reverse().map(t =>
-      `${t.time.toLocaleTimeString()} — ${t.price} — digit <b>${t.digit}</b>`
-    ).join("<br>");
-    drawDigits();
-  }
-
-  function disconnect(restarting = false) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-    if (ws) {
-      const old = ws;
-      ws = null;
-      old.onopen = old.onmessage = old.onerror = old.onclose = null;
-      try { old.close(); } catch (_) {}
-    }
-    $("stop").disabled = true;
-    $("connect").disabled = false;
-    if (!restarting) status("Disconnected", "#9cacc3");
-  }
-
-  function connect() {
-    manuallyStopped = false;
-    disconnect(true);
-    status("Connecting…");
-    $("detail").textContent = "Opening Deriv WebSocket connection.";
-    $("connect").disabled = true;
-    $("stop").disabled = false;
-
-    try {
-      ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
-    } catch (e) {
-      failed("Could not create WebSocket: " + e.message);
-      return;
-    }
-
-    ws.onopen = () => {
-      status("Connected", "#53e0a1");
-      $("detail").textContent = "Subscribing to " + $("market").selectedOptions[0].text;
-      const id = requestId++;
-      ws.send(JSON.stringify({
-        ticks: $("market").value,
-        subscribe: 1,
-        req_id: id
-      }));
+}
+function connect(){
+  disconnect();
+  count=0;recent=[];
+  countEl.textContent="0";
+  priceEl.textContent="—";
+  digitEl.textContent="—";
+  ticksEl.innerHTML="<li>Connecting…</li>";
+  setStatus("Connecting…");
+  connectBtn.disabled=true;
+  const symbol=marketEl.value;
+  try{
+    socket=new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
+    socket.onopen=()=>{
+      setStatus("Connected — subscribing…","#38bdf8");
+      socket.send(JSON.stringify({ticks:symbol,subscribe:1}));
     };
-
-    ws.onmessage = event => {
+    socket.onmessage=(event)=>{
       let data;
-      try { data = JSON.parse(event.data); } catch (_) { return; }
-
-      if (data.error) {
-        status("API error", "#ff8080");
-        $("detail").textContent = data.error.message || "Deriv returned an error.";
+      try{data=JSON.parse(event.data)}catch(e){return}
+      if(data.error){
+        setStatus("Error: "+data.error.message,"#fb7185");
+        connectBtn.disabled=false;
         return;
       }
-
-      if (data.msg_type === "tick" && data.tick) {
-        const t = data.tick;
-        renderTick(t.quote, t.epoch, Number(t.pip_size));
-        status("Receiving live ticks", "#53e0a1");
-        $("detail").textContent = "Market: " + $("market").selectedOptions[0].text;
+      if(data.msg_type==="tick" && data.tick){
+        const p=String(data.tick.quote);
+        const digits=p.replace(/\D/g,"");
+        const last=digits.length?digits.slice(-1):"—";
+        priceEl.textContent=p;
+        digitEl.textContent=last;
+        count++;
+        countEl.textContent=String(count);
+        recent.unshift(p+"  |  last digit: "+last);
+        recent=recent.slice(0,8);
+        ticksEl.innerHTML=recent.map(x=>"<li>"+x+"</li>").join("");
+        setStatus("Live data received","#4ade80");
       }
     };
-
-    ws.onerror = () => {
-      status("Connection error", "#ff8080");
-      $("detail").textContent = "Check your internet connection and reload the page.";
+    socket.onerror=()=>{
+      setStatus("Connection error — check internet or try again","#fb7185");
+      connectBtn.disabled=false;
     };
-
-    ws.onclose = () => {
-      ws = null;
-      $("connect").disabled = false;
-      $("stop").disabled = true;
-      if (manuallyStopped) return;
-      status("Connection closed", "#ff8080");
-      $("detail").textContent = "Tap Connect to try again.";
+    socket.onclose=()=>{
+      if(statusEl.textContent.startsWith("Live")||statusEl.textContent.startsWith("Connected")){
+        setStatus("Connection closed — tap Connect to retry","#fbbf24");
+      }
+      connectBtn.disabled=false;
     };
+    setTimeout(()=>{
+      if(socket && socket.readyState!==WebSocket.OPEN){
+        setStatus("Still connecting — check internet and retry","#fbbf24");
+        connectBtn.disabled=false;
+      }
+    },10000);
+  }catch(e){
+    setStatus("Could not start connection","#fb7185");
+    connectBtn.disabled=false;
   }
-
-  function failed(message) {
-    status("Unable to connect", "#ff8080");
-    $("detail").textContent = message;
-    $("connect").disabled = false;
-    $("stop").disabled = true;
-  }
-
-  $("connect").addEventListener("click", () => {
-    ticks = [];
-    total = 0;
-    $("price").textContent = "—";
-    $("lastDigit").textContent = "—";
-    $("count").textContent = "0";
-    $("recent").textContent = "Waiting for ticks…";
-    drawDigits();
-    connect();
-  });
-
-  $("stop").addEventListener("click", () => {
-    manuallyStopped = true;
-    disconnect();
-    $("detail").textContent = "Connection stopped by you.";
-  });
-
-  $("market").addEventListener("change", () => {
-    if (!manuallyStopped) {
-      ticks = [];
-      total = 0;
-      $("count").textContent = "0";
-      $("price").textContent = "—";
-      $("lastDigit").textContent = "—";
-      drawDigits();
-      connect();
-    }
-  });
-
-  drawDigits();
-})();
+}
+connectBtn.addEventListener("click",connect);
+marketEl.addEventListener("change",()=>{
+  if(socket && socket.readyState===WebSocket.OPEN) connect();
+});
 </script>
 </body>
 </html>
